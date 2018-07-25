@@ -1,0 +1,422 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <Windows.h>
+#include <conio.h>
+#define OK 0
+#define N 10
+
+	//包含菜品链表的餐厅结构体
+	typedef struct Cantee{
+		char* name;
+		int i;
+	}_Cantee;
+
+	//菜品结构体
+	typedef struct Foods{
+		char name[20];
+		float price;
+	}_Foods;
+
+	/*线性表的单链表存储结构*/
+	typedef struct Node
+	{
+		_Foods date;
+		 int number;
+		struct Node *next;
+	} Node;
+
+	typedef struct Users{	//定义用户结构体
+		char* Account;
+		char* Passwd;
+		int Online;
+		int Flag;
+	}_User;
+
+	//LinkList是一个链表节点
+	typedef struct Node* LinkList;
+
+
+int ListInsert(LinkList *L, _Foods e ){
+
+	LinkList p,s;
+	p = *L;
+	s = (LinkList)malloc(sizeof(Node));//生成新节点
+
+	while ( p->next )/*寻找第i个结点*/
+	{
+		p = p->next;
+	}
+	if ( !p )
+		return ERROR;
+	
+	
+	p->next = s;
+	p->next->date = e;
+	p->next->number = p->number+1;
+	p->next->next = NULL;
+	
+	return OK;
+}
+
+/*修改结点*/
+int ListChange(LinkList *L, int i, _Foods e ){
+	int j;
+	LinkList p;
+	p = *L;
+	j = 1;
+	while ( p && j < i )/*寻找第i个结点*/
+	{
+		p = p->next;
+		++j;
+	}
+	if ( !p || j > i)
+		return ERROR;
+	p->date = e;
+
+	return OK;
+}
+
+int ListDelete(LinkList *L, int i)
+{
+	int j;
+	LinkList p,q;
+	p = *L; j = 1;
+	while ( p->next && j < i )
+	{
+		p = p->next;
+		++j;
+
+	} /*遍历寻找第i个元素*/
+	if( !(p->next) ||  j>i )
+		return 1;//i不存在
+	q = p->next;
+	p->next = q->next;
+	free(q);
+	return OK;
+}
+
+/*随机产生n个元素的值赋给Foods.price,建立带头结点的单链表L（尾插法）*/
+void CreateListTail(LinkList *L, int n)
+{
+	LinkList p,r;
+	int i;
+	srand( time(0) );	//初始化随机数种子
+	*L = (LinkList)malloc(sizeof(Node));
+	r = *L;
+	for( i = 0; i<n; i++)
+	{
+		p = (LinkList)malloc(sizeof(Node));
+		p->number = (unsigned int)i;
+		p->date.price = (float)(rand()%10+1);
+		strcpy(p->date.name, "菜品");
+		r->next = p;
+		r = p;
+	}
+	r->next = NULL;
+}
+
+/*刷新链表*/
+void FlashList(LinkList *List, int n){
+	int i = 0;
+	LinkList p = (LinkList)malloc(sizeof(Node));
+	p = *List;
+	for( i = 0; i<n; i++)
+	{
+		p->next->number = i;
+		p = p->next;
+	}
+}
+
+void PrintList(LinkList L, int MAX){
+	int j;
+	LinkList p = (LinkList)malloc(sizeof(Node));		//声明一个节点p
+	p = L->next;	//p指向L的第一个节点
+	j = 1;
+	printf("\n所有的菜品信息:\n\n");
+	while( p /*&& j < MAX*/ )
+	{
+		printf("\t编号：\t%u \t菜名：\t %s     \t价格：\t%2.2f \n",p->number,p->date.name, p->date.price);
+		p = p->next;
+		++j;
+	}
+	printf("\n------------------------------------------------------------------------\n");
+}
+
+void _WelcomScreem(){
+	printf("\n\n\t\t");
+	puts("|-------------------------------------|");
+	printf("\n\t\t|   ");
+	puts("欢迎使用方小明餐厅信息管理系统!   |");
+	printf("\n\t\t|-------------------------------------|\n");
+}
+
+int Get_Passwd(char *Passwd,char *NewPasswd)
+{
+	char s[22],ch;
+	char *p = s;
+	int i = 0,j = 0,k = 0;
+
+	for(i; i < 21 && (ch=getch()) != '\r'; i++)
+	{
+		if(ch!=8)
+		{
+			s[j] = ch;
+			putchar('*');
+			j++;
+		}else{
+			putchar('\b');
+			putchar(' ');
+			putchar('\b');
+			j--;
+		}
+	}
+	s[j] = '\0';
+	while( *NewPasswd++ = *p++) ++k;
+	if( k > 20 )
+		return 1;
+	else
+		return 0;
+}
+
+int _Call_Login(_User Admin){
+	int j = 0;
+	char* tmpAccount = (char *)malloc(sizeof(char)*20);
+	char* tmpPasswd = (char *)malloc(sizeof(char)*6);
+
+	for(j = 0; j<3; j++)
+	{
+		int ret = 0;
+		printf("请输入您的账号:");scanf("%s",tmpAccount);
+		printf("请输入密码："); ret = Get_Passwd(Admin.Passwd,tmpPasswd);
+		if( ret ){printf("\n\a密码长度超出限制！\n");break;}
+		if( !strcmp(tmpAccount, Admin.Account) && !strcmp(tmpPasswd, Admin.Passwd) )
+		{
+			Admin.Online = 1; 
+			break;
+		}
+		else
+		{
+			Admin.Online = 0;
+			if ( j == 2 )
+			{
+				printf("\n\t\a尝试次数太多！登陆失败，返回主菜单\n\n");
+				break;
+			}
+			printf("\n\t\a密码或账号错误，请重新输入:\n\n");
+		}
+	}
+	return Admin.Online;
+}
+
+int _ChangePasswd(_User *Padmin){
+	//char* tmpAccount = (char *)malloc(sizeof(char)*21);
+	char* tmpPasswd = (char *)malloc(sizeof(char)*21);
+	char* newPasswd = (char *)malloc(sizeof(char)*21);
+	int ret = 0;
+
+	//printf("请输入账号:");scanf("%s",tmpAccount);
+	printf("\n\t请输入原密码："); Get_Passwd( Padmin->Passwd,tmpPasswd);
+	if( !strcmp( tmpPasswd,Padmin->Passwd ) ){
+		printf("\n\t请输入新密码(最多20位)："); Get_Passwd( Padmin->Passwd ,newPasswd);
+		Padmin->Passwd = newPasswd ;ret = 1;printf("\n\t修改密码成功");/*两次相同才能更改*/}
+	else
+	{
+		printf("\n\t新旧密码不匹配,更改失败！\n");
+		ret = 0;
+	}
+	return ret;
+}
+
+void _Call_Exit(){
+	system("cls");
+	printf("\n\n\n\t\t谢谢使用，再见！");
+	Sleep(2000);
+	exit(0);
+}
+
+void Save_To_File(LinkList pHead){//向文件中写数据到链表
+		FILE *fp = fopen("D:/CanteeInfoDate.dat","wb");
+		LinkList p = pHead;
+		while (p){
+			fwrite(p,sizeof(Node),1,fp);
+			p = p->next;
+		}
+		printf("新建配置文件并写入成功！");
+		fclose(fp);
+}
+
+int Read_From_File(LinkList PList){//从文件中读数据到链表
+	FILE *fp;
+	int ret = 0;
+	LinkList pf,pfNext;
+	fp = fopen("D:/CanteeInfoDate.dat","r");
+	
+	if(fp)
+		{
+			pf = PList;
+			while( fread(pf,sizeof(Node),1,fp) ){
+				if( pf->next != NULL ){
+					pfNext = (LinkList)malloc(sizeof(Node));
+					pf->next = pfNext;
+					pf = pf->next;
+					}
+				}
+
+		fclose(fp);
+		ret = 0;
+		}
+	else
+		ret = 1;
+	return ret;
+}
+
+
+int main(){
+
+	int Num = N,Fileret = 0;
+	int Choose_One,Choose_Two;
+	int i = 0;int ret = 0;
+
+	_User Administrator = {"admin","000000",0,0};//初始化默认管理员
+
+	LinkList PList = (LinkList)malloc(sizeof(Node));//定义头结点
+
+	_User *Padmin = &Administrator;
+
+	Fileret = Read_From_File(PList);
+	if(Fileret == OK)
+	{
+		printf("\n正在读取配置信息：----> 成功！\n");
+		printf("所有信息已经读入链表!\n");
+	}
+	else{
+		printf("\n未找到配置文件！\n");
+		CreateListTail( &PList,Num);//初始化菜品菜单
+		Save_To_File(PList);
+	}
+	
+	for (;;)
+	{
+		//显示一个菜单
+
+		if(++i)_WelcomScreem();
+		printf("\n\t1--> 查询菜单 \n\t2--> 管理员登录系统 \n\t0--> 退出本系统\n");
+		printf("\n请输入您的操作数:");
+		scanf("%d", &Choose_One);
+		system("cls");_WelcomScreem();
+		//printf(当前系统时间);
+		printf("\n--------------------");
+		printf("--------------------");
+		printf("--------------------------------\n");
+		switch (Choose_One)
+		{
+			
+		case 1: //查询菜单
+			PrintList( PList, Num);
+			break;
+		case 2: //管理员登录系统
+			{
+					if ( Administrator.Online = _Call_Login(Administrator) )
+						{
+							if ( !Administrator.Flag ){
+								printf("\n\t第一次登陆，请修改密码！\n");
+								ret = _ChangePasswd(Padmin);
+								if (ret)Administrator.Flag +=1;
+								printf(",请重新登陆");
+								Administrator.Online = 0;
+							}else{
+
+								Administrator.Flag +=1;
+								Choose_Two = 1;
+								for (; Choose_Two != 0;)//二级菜单，管理员菜单
+								{
+									_WelcomScreem();
+									printf("\n\t1--> 查询菜单 \n\t2--> 修改菜品信息 \n\t3--> 退出登陆并保存修改 \n");
+									printf("\n请输入您的操作数:");
+									scanf("%d", &Choose_Two);
+									system("cls");//_WelcomScreem();
+									switch(Choose_Two)
+									{
+										case 1: 
+											PrintList( PList, Num);//查询菜单
+											break;
+										case 2://增改菜品信息
+											{
+												int Choose_Three;
+												system("cls");_WelcomScreem();
+												printf("\n\n\t1--> 更新菜品 \n\t2--> 新增菜品 \n\t3--> 删除菜品 \n\t4--> 返回上一级 \n");
+												scanf("%d",&Choose_Three);
+												switch(Choose_Three){
+													case 1:{
+														int tmpnum = 0,ret = 0;float tmpprice = 0.0;
+														_Foods *e = (_Foods*)malloc(sizeof(_Foods));
+														char *name = (char *)malloc(20*sizeof(char));
+														PrintList( PList, Num);//查询菜单
+														printf("\n请输入您要修改的菜品的编号:");
+														scanf("%d",&tmpnum);
+														printf("\n请输入新的名字：");
+														scanf("%s",name);
+														strcpy(e->name,name);
+														printf("\n请输入新的价格：");
+														scanf("%f",&tmpprice);
+														e->price = tmpprice;
+
+														ret = ListChange(&PList,tmpnum+2,*e);
+														if(!ret)
+															printf("\n修改成功！\n");
+														else
+															printf("\n修改失败！\n");
+														}break;
+													case 2:{
+														int ret = 0;float tmpprice = 0.0;
+														_Foods *e = (_Foods*)malloc(sizeof(_Foods));
+														char *name = (char *)malloc(20*sizeof(char));
+														PrintList( PList, Num);//查询菜单
+														printf("\n请输入新菜品的名字：");
+														scanf("%s",name);
+														strcpy(e->name,name);
+														printf("\n请输入新菜品的价格：");
+														scanf("%f",&tmpprice);
+														e->price = tmpprice;
+
+														ret = ListInsert(&PList,*e);
+														if(!ret){
+															printf("\n修改成功！\n");Num++;}
+														else
+															printf("\n修改失败！\n");
+														
+														   }break;
+													case 3:{
+														int num,ret = 0;
+														PrintList( PList, Num);//查询菜单
+														printf("请输入要删除的菜品编号：");
+														scanf("%d",&num);
+														ret = ListDelete(&PList, num+1);
+														if (ret != OK )
+															printf("删除失败!\n");
+														else{
+															Num--;
+															printf("删除成功!\n");FlashList( &PList,Num);}
+														   }break;
+													case 4:break;
+												}
+											}break;
+										case 3:
+											{Choose_Two = 0;Save_To_File(PList);}
+									}
+								}
+							}
+
+						}
+			}
+			break;
+		case 0: 
+			_Call_Exit();
+		default:
+			printf("\n\t请输入正确的选项!\n");
+		}
+
+	}
+}
